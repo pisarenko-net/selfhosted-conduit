@@ -4,6 +4,10 @@
 *.dll
 *.so
 *.dylib
+selfhosted-conduit
+
+# Exclude generated test files
+*.db
 
 # Test binary, built with `go test -c`
 *.test
