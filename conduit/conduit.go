@@ -5,8 +5,6 @@ import (
 	"github.com/pisarenko-net/selfhosted-conduit/handler/backend"
 	"github.com/pisarenko-net/selfhosted-conduit/handler/client"
 	"github.com/pisarenko-net/selfhosted-conduit/router"
-	// "fmt"
-	// "io/ioutil"
 	"net/http"
 )
 
