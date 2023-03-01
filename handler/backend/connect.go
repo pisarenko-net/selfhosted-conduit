@@ -4,22 +4,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+    "github.com/pisarenko-net/selfhosted-conduit/connect"
     "github.com/pisarenko-net/selfhosted-conduit/router"
-    "time"
+    "github.com/gorilla/mux"
 )
 
-type testMessage struct {
-    event string
-    data  string
-}
-
-func HandleConnectRequests(router *router.Router) {
-    http.HandleFunc("/backend/connect", func(response http.ResponseWriter, request *http.Request) {
-        if request.Method != "POST" {
-            http.Error(response, "Method not allowed", http.StatusMethodNotAllowed)
-            return
-        }
-
+func HandleConnectRequests(reqRouter *mux.Router, connections connect.BackendConnections, router *router.Router) {
+    reqRouter.HandleFunc("/backend/connect", func(response http.ResponseWriter, request *http.Request) {
 		body, err := ioutil.ReadAll(request.Body)
 		if err != nil {
 			http.Error(response, "Error reading request body", http.StatusInternalServerError)
@@ -28,41 +19,31 @@ func HandleConnectRequests(router *router.Router) {
 		defer request.Body.Close()
 
 		cert := request.TLS.PeerCertificates[0]
+		backendCode := string(body)
 
-		if router.VerifyBackendCode(cert, string(body)) {
-			OpenBackendChannel(response, request)
+		if router.VerifyBackendCode(cert, backendCode) {
+			backendChan := connections.OpenBackendChannel(backendCode)
+			defer connections.CloseBackendChannel(backendCode)
+			StartBackendLoop(backendChan, response, request)
 		} else {
 			http.Error(response, "Provided certificate doesn't match code", http.StatusBadRequest)
 			return
 		}
-    })
+    }).Methods("POST")
 }
 
-func OpenBackendChannel(w http.ResponseWriter, r *http.Request) {
+func StartBackendLoop(backendChan chan connect.Message, w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "text/event-stream")
     w.Header().Set("Cache-Control", "no-cache")
     w.Header().Set("Connection", "keep-alive")
 
-    // TODO: this channel needs to be made available for routing
-    //   client requests will make their way through here.
-	var sseCh = make(chan testMessage)
-
-	// this is just to flex the sending muscle
-    go func() {
-        for {
-            sseCh <- testMessage{"message", "This is a message"}
-
-            time.Sleep(3 * time.Second)
-        }
-    }()
-
     for {
         // Wait for a message to be sent to the SSE channel.
-        message := <-sseCh
+        message := <-backendChan
 
         // Write the SSE message to the response.
-        fmt.Fprintf(w, "event: %s\n", message.event)
-        fmt.Fprintf(w, "data: %s\n\n", message.data)
+        fmt.Fprintf(w, "event: %s\n", message.Event)
+        fmt.Fprintf(w, "data: %s\n\n", message.Data)
 
         // Flush the response to ensure the message is sent immediately.
         f, ok := w.(http.Flusher)
