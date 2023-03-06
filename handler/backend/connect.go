@@ -9,7 +9,7 @@ import (
     "github.com/gorilla/mux"
 )
 
-func HandleConnectRequests(reqRouter *mux.Router, connections connect.BackendConnections, router *router.Router) {
+func HandleConnectRequests(reqRouter *mux.Router, router *router.Router, connections connect.BackendConnections) {
     reqRouter.HandleFunc("/backend/connect", func(response http.ResponseWriter, request *http.Request) {
 		body, err := ioutil.ReadAll(request.Body)
 		if err != nil {

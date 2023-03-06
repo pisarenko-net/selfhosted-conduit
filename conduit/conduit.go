@@ -16,7 +16,8 @@ func Start(cert tls.Certificate, pathToDB string) error {
 	backendRouter := router.New(pathToDB)
 	defer backendRouter.Close()
 
-	connections := make(connect.BackendConnections)
+	backendConnections := make(connect.BackendConnections)
+	responseChannels := make(connect.ResponseChannels)
 
 	tlsConfig := &tls.Config{
 		Certificates: []tls.Certificate{cert},
@@ -24,9 +25,10 @@ func Start(cert tls.Certificate, pathToDB string) error {
 	}
 
 	backend.HandleRegisterRequests(reqRouter, backendRouter)
-	backend.HandleConnectRequests(reqRouter, connections, backendRouter)
+	backend.HandleConnectRequests(reqRouter, backendRouter, backendConnections)
+	backend.HandleResponseRequests(reqRouter, backendRouter, responseChannels)
 
-	client.HandleRequestRequests(reqRouter, connections)
+	client.HandleRequestRequests(reqRouter, backendConnections, responseChannels)
 	http.HandleFunc("/client/link", client.Link)
 
 	server := &http.Server{

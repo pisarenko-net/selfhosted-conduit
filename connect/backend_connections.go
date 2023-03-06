@@ -1,10 +1,5 @@
 package connect
 
-type Message struct {
-    Event string
-    Data  string
-}
-
 type BackendConnections map[string]chan Message
 
 func (c *BackendConnections) OpenBackendChannel(backendCode string) chan Message {
