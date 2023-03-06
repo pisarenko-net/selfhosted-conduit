@@ -1,14 +1,14 @@
 package router
 
 import (
-	bolt "go.etcd.io/bbolt"
 	"crypto/x509"
+	bolt "go.etcd.io/bbolt"
 	"reflect"
 )
 
 const MAP_BACKENDS string = "BACKENDS"
 
-type Router struct{
+type Router struct {
 	db *bolt.DB
 }
 

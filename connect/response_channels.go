@@ -1,7 +1,7 @@
 package connect
 
 import (
-    "github.com/google/uuid"
+	"github.com/google/uuid"
 )
 
 type ResponseChannels map[string]chan Message

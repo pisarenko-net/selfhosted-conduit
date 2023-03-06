@@ -7,10 +7,10 @@ import (
 )
 
 func GetEncryptedBodyOrFail(response http.ResponseWriter, request *http.Request) (string, bool) {
-    if request.ContentLength == 0 {
-    	http.Error(response, "Request body is required", http.StatusBadRequest)
-    	return "", false
-    }
+	if request.ContentLength == 0 {
+		http.Error(response, "Request body is required", http.StatusBadRequest)
+		return "", false
+	}
 
 	bodyBytes, err := ioutil.ReadAll(request.Body)
 	if err != nil {
@@ -22,8 +22,8 @@ func GetEncryptedBodyOrFail(response http.ResponseWriter, request *http.Request)
 	body := string(bodyBytes)
 
 	if _, err := base64.StdEncoding.DecodeString(body); err != nil {
-    	http.Error(response, "Invalid request body", http.StatusBadRequest)
-    	return "", false
+		http.Error(response, "Invalid request body", http.StatusBadRequest)
+		return "", false
 	}
 
 	return body, true
